@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LFC67 | Amigos jugando</title>
+  <style>
+    :root { --red:#d9251b; --dark:#111; --muted:#666; --line:#ddd; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f4f4f4; color:#151515; font-family:Arial,Helvetica,sans-serif; }
+    .page { max-width:1180px; margin:18px auto; background:#fff; min-height:95vh; padding:18px 22px 32px; box-shadow:0 2px 12px #00000012; }
+    .top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .logo { background:#090909; color:white; font-size:clamp(25px,4vw,42px); font-weight:900; padding:8px 12px; letter-spacing:-1px; }
+    .logo span { color:var(--red); }
+    .search { flex:1; min-width:230px; display:flex; gap:0; }
+    .search input { min-width:0; flex:1; padding:12px; border:2px solid #bbb; font-size:16px; }
+    .search button { border:1px solid #aaa; background:#eee; padding:0 22px; font-size:16px; cursor:pointer; }
+    .tagline { margin-left:auto; color:#555; font-size:14px; }
+    .tagline strong { color:var(--red); }
+    nav { display:flex; flex-wrap:wrap; margin-top:12px; background:var(--red); border-bottom:5px solid #111; }
+    nav button { color:#fff; background:transparent; border:0; border-right:1px solid #ffffff40; padding:13px 16px; font-size:15px; cursor:pointer; }
+    nav button:hover, nav button.active { background:#a91510; }
+    h1 { font-size:clamp(24px,4vw,36px); font-weight:500; margin:22px 0 8px; text-transform:uppercase; }
+    .sub { color:#777; font-size:14px; margin-bottom:16px; }
+    .player-wrap { background:#111; padding:8px; }
+    video { display:block; width:100%; max-height:650px; background:#000; aspect-ratio:16/9; }
+    .player-controls { color:#fff; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 6px 4px; flex-wrap:wrap; }
+    .next-btn { display:none; border:0; background:var(--red); color:white; padding:11px 17px; font-weight:bold; cursor:pointer; border-radius:3px; }
+    .next-btn.show { display:inline-block; }
+    .next-btn:hover { background:#aa1711; }
+    .notice { color:#aaa; font-size:12px; }
+    #results { margin-top:24px; }
+    #results h2 { font-size:22px; margin-bottom:12px; }
+    .result-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+    .result-card { border:1px solid var(--line); padding:10px; background:#fff; }
+    .result-card img { width:100%; aspect-ratio:4/3; object-fit:cover; background:#eee; display:block; }
+    .result-card h3 { font-size:16px; margin:9px 0 4px; }
+    .result-card p { color:#555; font-size:13px; margin:0; }
+    .bio { border:1px solid var(--line); padding:16px; line-height:1.6; background:#fafafa; }
+    .hidden { display:none !important; }
+    .empty { color:#666; background:#f7f7f7; padding:14px; border-left:4px solid var(--red); }
+    footer { border-top:1px solid var(--line); margin-top:30px; padding-top:14px; color:#777; font-size:12px; }
+    @media(max-width:600px) { .page{margin:0;padding:12px;} nav button{flex:1;padding:11px 8px;font-size:13px;} .tagline{width:100%;margin:0;} }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div class="logo"><span>L</span>FC67</div>
+      <form class="search" id="searchForm" role="search">
+        <input id="searchInput" type="search" placeholder="Buscar imágenes, biografía o El lider 18cm..." aria-label="Buscar">
+        <button type="submit">Buscar</button>
+      </form>
+      <div class="tagline"><strong>AMIGOS</strong> jugando y compartiendo</div>
+    </header>
+
+    <nav aria-label="Navegación">
+      <button class="active" data-view="video">Video</button>
+      <button data-query="cobo1">Cobo 1</button>
+      <button data-query="cobo2">Cobo 2</button>
+      <button data-query="cobo3">Cobo 3</button>
+      <button data-query="biografía de cobo">Biografía</button>
+    </nav>
+
+    <section id="videoSection">
+      <h1>PEDOFILO Y VENTANA-SERIE</h1>
+      <div class="sub">Video destacado · <span id="videoLabel">Video 1</span></div>
+      <div class="player-wrap">
+        <video id="videoPlayer" controls preload="metadata" playsinline>
+          <source src="videos/video.mp4" type="video/mp4">
+          Tu navegador no puede reproducir este video.
+        </video>
+        <div class="player-controls">
+          <span class="notice" id="videoHint">Video destacado de LFC67</span>
+          <button class="next-btn" id="nextButton">Continuar al siguiente ▶</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="hidden" aria-live="polite">
+      <h2 id="resultsTitle">Resultados</h2>
+      <div id="resultsContent"></div>
+    </section>
+
+    <footer>LFC67 · Los videos e imágenes se cargan desde las carpetas del proyecto.</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const input = document.getElementById('searchInput');
+    const results = document.getElementById('results');
+    const resultsTitle = document.getElementById('resultsTitle');
+    const resultsContent = document.getElementById('resultsContent');
+    const videoSection = document.getElementById('videoSection');
+    const player = document.getElementById('videoPlayer');
+    const nextButton = document.getElementById('nextButton');
+    const videoLabel = document.getElementById('videoLabel');
+    const videoHint = document.getElementById('videoHint');
+
+    const coboBio = `
+      <div class="bio">
+        <h3>Biografía de Cobo
+          <p>
+    Fercho es un joven de Popayán cuya historia, tal como se cuenta en tono de broma entre conocidos,
+    está relacionada con las amistades, las relaciones amorosas y las anécdotas de su entorno.
+    Con el tiempo, sus gustos por el gimnasio y salir con amigos se han convertido en parte de esa
+    imagen. Las historias y rumores deben entenderse como relatos informales y no como hechos verificados.
+  </p></h3>
+        <p>Fercho Cobo es un joven cuya historia parece estar marcada por las decepciones, las amistades perdidas y los amores que nunca terminaron como esperaba. Durante su etapa escolar, soñaba con ser alguien reconocido, tener buenos amigos y encontrar a una persona que lo quisiera de verdad. Sin embargo, con el paso del tiempo, las relaciones se complicaron y las personas que consideraba cercanas comenzaron a alejarse.
+
+Detrás de su apariencia de seguridad, el gimnasio y las salidas en su Victory, Fercho parecía cargar con una historia de inseguridades y sentimientos no resueltos. En el amor, las cosas tampoco fueron fáciles: entre rupturas, celos y decepciones, terminó enfrentándose a la posibilidad de que algunas personas a las que quería ya no sintieran lo mismo por él.
+
+Sus amistades, que alguna vez fueron parte importante de su vida, también se convirtieron en motivo de tristeza. Las burlas, los rumores y las rivalidades hicieron que su nombre se volviera protagonista de historias que no siempre lo dejaban bien parado.
+
+Y así, entre recuerdos del preuniversitario, amores perdidos y amigos que tomaron caminos diferentes, quedó la historia de Fercho Cobo: la de un joven que quería ser importante para los demás, pero que, en medio de tantos conflictos, todavía tenía mucho que aprender sobre el amor, la amistad y el valor de sí mismo.
+
+Porque, al final, detrás de todas las bromas y las apariencias, Fercho también podría ser alguien que simplemente quería sentirse querido.</p>
+      </div>`;
+
+    const imageItems = [
+      { name:'cobo1', path:'images/cobo1.jpg', description:'Imagen cobo1' },
+      { name:'cobo2', path:'images/cobo2.jpg', description:'Imagen cobo2' },
+      { name:'cobo3', path:'images/cobo3.jpg', description:'Imagen cobo3' }
+    ];
+    let currentVideo = 1;
+
+    function showView(view) {
+      const isVideo = view === 'video';
+      videoSection.classList.toggle('hidden', !isVideo);
+      results.classList.toggle('hidden', isVideo);
+      document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    }
+
+    function normalizeText(text) {
+      return text.trim().toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function runSearch(rawQuery) {
+      const q = normalizeText(rawQuery);
+
+      // Al buscar "El lider 18cm", abre la segunda página HTML.
+      if (q === 'el lider 18cm') {
+        window.location.href = 'fercho.html';
+        return;
+      }
+
+      if (!q) {
+        showView('video');
+        return;
+      }
+
+      showView('results');
+      resultsContent.innerHTML = '';
+
+      if (q.includes('biograf') || q === 'cobo' || q.includes('quien es cobo')) {
+        resultsTitle.textContent = 'Biografía de Cobo';
+        resultsContent.innerHTML = coboBio;
+        return;
+      }
+
+      let matches = imageItems.filter(item => {
+        const terms = q.replaceAll(',', ' ').split(/\s+/).filter(Boolean);
+        return terms.some(term => item.name.includes(term) || ['imagen','imagenes','fotos'].includes(term));
+      });
+
+      if (['imagenes', 'fotos', 'cobo fotos'].includes(q)) matches = imageItems;
+
+      if (!matches.length) {
+        resultsTitle.textContent = 'No se encontraron resultados';
+        resultsContent.innerHTML = '<div class="empty">Prueba con <strong>cobo1</strong>, <strong>cobo2</strong>, <strong>cobo3</strong>, <strong>biografía de Cobo</strong> o <strong>El lider 18cm</strong>.</div>';
+        return;
+      }
+
+      resultsTitle.textContent = 'Imágenes encontradas';
+      const grid = document.createElement('div');
+      grid.className = 'result-grid';
+
+      matches.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'result-card';
+        const img = document.createElement('img');
+        img.src = item.path;
+        img.alt = item.name;
+        img.onerror = () => {
+          img.removeAttribute('src');
+          img.alt = 'Añade ' + item.path + ' a la carpeta del proyecto';
+          img.style.padding = '25px 8px';
+          img.style.objectFit = 'contain';
+          img.style.color = '#666';
+          img.style.background = '#eee';
+        };
+        const title = document.createElement('h3');
+        title.textContent = item.name;
+        const desc = document.createElement('p');
+        desc.textContent = 'Archivo: ' + item.path;
+        card.append(img, title, desc);
+        grid.appendChild(card);
+      });
+      resultsContent.appendChild(grid);
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      runSearch(input.value);
+    });
+
+    document.querySelectorAll('nav button').forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.dataset.query) {
+          input.value = button.dataset.query;
+          runSearch(button.dataset.query);
+        } else {
+          showView('video');
+        }
+      });
+    });
+
+    player.addEventListener('ended', () => nextButton.classList.add('show'));
+    player.addEventListener('play', () => nextButton.classList.remove('show'));
+    nextButton.addEventListener('click', () => {
+      currentVideo = currentVideo === 1 ? 2 : 1;
+      const src = currentVideo === 2 ? 'videos/video2.mp4' : 'videos/video.mp4';
+      player.pause();
+      player.src = src;
+      player.load();
+      videoLabel.textContent = 'Video ' + currentVideo;
+      videoHint.textContent = 'Comprueba que exista el archivo ' + src;
+      nextButton.classList.remove('show');
+      player.play().catch(() => {});
+    });
+
+    player.addEventListener('error', () => {
+      videoHint.textContent = 'Añade videos/video.mp4 y videos/video2.mp4 para usar el reproductor.';
+    });
+  </script>
+</body>
+</html>
