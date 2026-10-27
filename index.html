@@ -48,7 +48,7 @@
     <header class="top">
       <div class="logo"><span>L</span>FC67</div>
       <form class="search" id="searchForm" role="search">
-        <input id="searchInput" type="search" placeholder="Buscar imágenes, biografía o El lider 18cm..." aria-label="Buscar">
+        <input id="searchInput" type="search" placeholder="Buscar imágenes, biografía, El lider 18cm o ig de fercho..." aria-label="Buscar">
         <button type="submit">Buscar</button>
       </form>
       <div class="tagline"><strong>FERCHO</strong>100KG EN PECHO</div>
@@ -141,8 +141,14 @@ Porque, al final, detrás de todas las bromas y las apariencias, Fercho también
     function runSearch(rawQuery) {
       const q = normalizeText(rawQuery);
 
-      // Al buscar "El lider 18cm", abre la segunda página HTML.
-      if (q === 'el lider 18cm') {
+      // Al buscar "ig de fercho", abrir el perfil de Instagram en otra pestaña.
+      if (q === 'ig de fercho') {
+        window.open('https://www.instagram.com/danicobo009?utm_source=ig_web_button_share_sheet&mdxt=ZDNlZDc0MzIxNw==', '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // Al buscar "El lider 18cm" o "El lider fercho", abre la página de Fercho.
+      if (q === 'el lider 18cm' || q === 'el lider fercho') {
         window.location.href = 'fercho.html';
         return;
       }
@@ -170,7 +176,7 @@ Porque, al final, detrás de todas las bromas y las apariencias, Fercho también
 
       if (!matches.length) {
         resultsTitle.textContent = 'No se encontraron resultados';
-        resultsContent.innerHTML = '<div class="empty">Prueba con <strong>cobo1</strong>, <strong>cobo2</strong>, <strong>cobo3</strong>, <strong>biografía de Cobo</strong> o <strong>El lider 18cm</strong>.</div>';
+        resultsContent.innerHTML = '<div class="empty">Prueba con <strong>cobo1</strong>, <strong>cobo2</strong>, <strong>cobo3</strong>, <strong>biografía de Cobo</strong> o <strong>El lider 18cm</strong> o <strong>ig de fercho</strong>.</div>';
         return;
       }
 
